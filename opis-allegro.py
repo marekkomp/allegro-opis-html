@@ -35,6 +35,23 @@ if uploaded_file is not None:
     first_sheet_name = list(sheet_names)[0]
     df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
     
+    # Lista kolumn do zachowania
+    columns_to_keep = [
+        "Status", "Rezultat", "ID oferty", "Link do oferty", "Akcja", "Status oferty",
+        "Kategoria główna", "Podkategoria", "Sygnatura/SKU Sprzedającego", "Liczba sztuk", 
+        "Cena PL", "Tytuł oferty", "Zdjęcia", "Opis oferty", "Informacje o gwarancjach (opcjonalne)", 
+        "Stan", "Model", "Marka", "Rodzaj", "Typ baterii", "Przekątna [\"]", 
+        "Rozdzielczość (px)", "Powłoka matrycy", "Rodzaj podświetlenia", "Typ matrycy", 
+        "Rodzaj podświetlania", "Przekątna ekranu (cale) [\"]", "Rozdzielczość natywna [px]", 
+        "Złącza", "Typ napędu", "Komunikacja", "Rodzaj karty graficznej", "System operacyjny", 
+        "Seria", "Taktowanie bazowe procesora [GHz]", "Liczba rdzeni procesora", "Typ pamięci RAM", 
+        "Wielkość pamięci RAM", "Typ dysku twardego", "Pojemność dysku [GB]", "Przekątna ekranu [\"]", 
+        "Seria procesora", "Ekran dotykowy", "Model procesora", "Typ obudowy", "Model procesora"
+    ]
+    
+    # Zachowanie tylko wybranych kolumn
+    df = df[columns_to_keep]
+
     if "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
         st.write(df[["Opis oferty"]].head())
