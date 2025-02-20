@@ -3,7 +3,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import io
 import json
-from openpyxl import load_workbook
 
 # Funkcja czyszcząca HTML i usuwająca niepotrzebne fragmenty JSON
 def clean_html(content):
@@ -47,30 +46,35 @@ if uploaded_file is not None:
     # Wczytanie pliku Excel z pominięciem ukrytych wierszy
     df = read_excel_skip_hidden(uploaded_file)
 
-    # Sprawdzenie, czy kolumna "Opis oferty" istnieje w DataFrame
-    if "Opis oferty" in df.columns:
+    # Sprawdzenie, czy kolumna "Kategoria główna" i "Opis oferty" istnieją w DataFrame
+    if "Kategoria główna" in df.columns and "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
-        st.write(df[["Opis oferty"]].head())
+        st.write(df[["Kategoria główna", "Opis oferty"]].head())
 
         # Przetwarzanie kolumny "Opis oferty"
         df['Opis oferty'] = df['Opis oferty'].apply(clean_html)
 
-        # Pokazanie przetworzonych danych
-        st.write("Przetworzone dane:")
-        st.write(df[["Opis oferty"]].head())
-
+        # Grupa kategorii
+        categories = ["Laptopy", "Komputery stacjonarne", "Podzespoły komputerowe", "Części do laptopów", "Akcesoria (Laptop, PC)"]
+        
         # Przygotowanie pliku do pobrania
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name="Przetworzone oferty")
+            for category in categories:
+                # Filtrowanie danych według kategorii
+                category_df = df[df["Kategoria główna"] == category]
+                if not category_df.empty:
+                    # Zapisanie danych w osobnej zakładce dla każdej kategorii
+                    category_df.to_excel(writer, index=False, sheet_name=category)
+
         output.seek(0)
 
         # Opcja pobrania poprawionego pliku
         st.download_button(
             label="Pobierz poprawiony plik Excel",
             data=output,
-            file_name="poprawiony_oferty.xlsx",
+            file_name="poprawiony_oferty_z_kategoriami.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     else:
-        st.error("Brak kolumny 'Opis oferty' w pliku Excel.")
+        st.error("Brak wymaganych kolumn: 'Kategoria główna' lub 'Opis oferty' w pliku Excel.")
