@@ -3,6 +3,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import io
 import json
+from openpyxl import load_workbook
 
 # Funkcja czyszcząca HTML i usuwająca niepotrzebne fragmenty JSON
 def clean_html(content):
@@ -22,8 +23,12 @@ def clean_html(content):
 
 # Funkcja do wczytania pliku Excel z pominięciem ukrytych wierszy
 def read_excel_skip_hidden(uploaded_file):
+    # Zapisujemy wgrany plik tymczasowo w pamięci
+    with open("uploaded_file.xlsx", "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
     # Wczytanie pliku za pomocą openpyxl
-    wb = load_workbook(uploaded_file, data_only=True)
+    wb = load_workbook("uploaded_file.xlsx", data_only=True)
     sheet = wb.active  # Wybieramy aktywny arkusz
 
     # Pobieramy wszystkie widoczne wiersze
