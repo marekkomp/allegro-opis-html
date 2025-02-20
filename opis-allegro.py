@@ -3,6 +3,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import io
 import json
+from openpyxl import load_workbook
 
 # Funkcja czyszcząca HTML i usuwająca niepotrzebne fragmenty JSON
 def clean_html(content):
@@ -20,6 +21,22 @@ def clean_html(content):
         # Jeśli nie jest to poprawny JSON, po prostu zwracamy oryginalny tekst
         return content
 
+# Funkcja do wczytania pliku Excel z pominięciem ukrytych wierszy
+def read_excel_skip_hidden(uploaded_file):
+    # Wczytanie pliku za pomocą openpyxl
+    wb = load_workbook(uploaded_file, data_only=True)
+    sheet = wb.active  # Wybieramy aktywny arkusz
+
+    # Pobieramy wszystkie widoczne wiersze
+    rows = []
+    for row in sheet.iter_rows(min_row=4):  # Rozpoczynamy od 4. wiersza, aby pominąć nagłówek
+        if not sheet.row_dimensions[row[0].row].hidden:  # Sprawdzamy, czy wiersz jest widoczny
+            rows.append([cell.value for cell in row])
+
+    # Tworzymy DataFrame z danych, z pominięciem ukrytych wierszy
+    df = pd.DataFrame(rows, columns=[cell.value for cell in sheet[4]])  # Używamy 4. wiersza jako nagłówka
+    return df
+
 # Streamlit UI
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
@@ -27,14 +44,10 @@ st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 uploaded_file = st.file_uploader("Wybierz plik Excel", type=["xlsm", "xlsx"])
 
 if uploaded_file is not None:
-    # Wczytanie pliku Excel do DataFrame, pomijając pierwsze 3 wiersze i traktując czwarty wiersz jako nagłówek
-    df = pd.read_excel(uploaded_file, sheet_name=None, header=3)  # Wczytujemy z pominięciem pierwszych trzech wierszy
-    
-    # Sprawdzenie, czy kolumna "Opis oferty" istnieje w pierwszym arkuszu
-    sheet_names = df.keys()
-    first_sheet_name = list(sheet_names)[0]
-    df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
-    
+    # Wczytanie pliku Excel z pominięciem ukrytych wierszy
+    df = read_excel_skip_hidden(uploaded_file)
+
+    # Sprawdzenie, czy kolumna "Opis oferty" istnieje w DataFrame
     if "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
         st.write(df[["Opis oferty"]].head())
@@ -49,7 +62,7 @@ if uploaded_file is not None:
         # Przygotowanie pliku do pobrania
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name=first_sheet_name)
+            df.to_excel(writer, index=False, sheet_name="Przetworzone oferty")
         output.seek(0)
 
         # Opcja pobrania poprawionego pliku
