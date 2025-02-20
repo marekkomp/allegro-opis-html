@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 import io
 import re
 
-# Funkcja czyszcząca HTML i usuwająca niepożądane fragmenty
+# Funkcja czyszcząca HTML i usuwająca niepożądane fragmenty JSON
 def clean_html(content):
-    # Usuwanie zbędnych fragmentów, takich jak JSON-like struktury
-    content = re.sub(r'\{"sections":\[\{"items":\[\{.*?\}\]\}\]\}', '', content)  # Przykład usuwania JSON
-    content = re.sub(r'(\{.*?\})', '', content)  # Usuwa inne struktury JSON, jeśli są
+    # Usuwanie tylko niepotrzebnych fragmentów JSON-like (zostawiając tekst)
+    content = re.sub(r'({"sections":.*?})', '', content)  # Usuwa JSON-like struktury
+    content = re.sub(r'\[.*?\]', '', content)  # Usuwa inne tablice JSON, jeśli są
 
     # Parsowanie HTML
     soup = BeautifulSoup(content, 'html.parser')
@@ -25,7 +25,7 @@ def clean_html(content):
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
 # Wgrywanie pliku Excel
-uploaded_file = st.file_uploader("Wybierz plik Excel", type=["xlsm", "xlsx"])
+uploaded_file = st.file_uploader("Wybaj plik Excel", type=["xlsm", "xlsx"])
 
 if uploaded_file is not None:
     # Wczytanie pliku Excel do DataFrame, obsługujemy zarówno .xlsm, jak i .xlsx
