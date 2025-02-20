@@ -2,10 +2,15 @@ import streamlit as st
 import pandas as pd
 from bs4 import BeautifulSoup
 import io
+import re
 
-# Funkcja czyszcząca HTML
+# Funkcja czyszcząca HTML i usuwająca niepożądane fragmenty
 def clean_html(content):
-    # Parsujemy HTML
+    # Usuwanie zbędnych fragmentów, takich jak JSON-like struktury
+    content = re.sub(r'\{"sections":\[\{"items":\[\{.*?\}\]\}\]\}', '', content)  # Przykład usuwania JSON
+    content = re.sub(r'(\{.*?\})', '', content)  # Usuwa inne struktury JSON, jeśli są
+
+    # Parsowanie HTML
     soup = BeautifulSoup(content, 'html.parser')
     
     # Usuwamy wszystkie niepożądane tagi
