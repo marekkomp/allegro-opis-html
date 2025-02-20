@@ -44,11 +44,20 @@ if uploaded_file is not None:
     # Wczytanie pliku Excel do DataFrame, traktując pierwszy wiersz jako nagłówek
     df = pd.read_excel(uploaded_file, sheet_name=None, header=0)  # Wczytujemy z pierwszym wierszem jako nagłówek
     
-    # Sprawdzenie, czy kolumna "Opis oferty" istnieje w pierwszym arkuszu
+    # Sprawdzenie, jakie kolumny zostały wczytane
+    st.write("Kolumny w wczytanym pliku:")
+    st.write(df.keys())  # Wypisujemy nazwy arkuszy
+    
+    # Wybieramy pierwszy arkusz z pliku
     sheet_names = df.keys()
     first_sheet_name = list(sheet_names)[0]
-    df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
+    df = df[first_sheet_name]  # Wybór pierwszego arkusza
     
+    # Wyświetlenie wczytanych kolumn
+    st.write("Wczytane kolumny:")
+    st.write(df.columns)
+
+    # Sprawdzenie, czy kolumna "Opis oferty" istnieje
     if "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
         st.write(df[["Opis oferty"]].head())
@@ -59,22 +68,4 @@ if uploaded_file is not None:
         # Selekcja tylko wybranych kolumn
         df_selected = df[columns_to_keep]
 
-        # Pokazanie przetworzonych danych
-        st.write("Przetworzone dane:")
-        st.write(df_selected.head())
-
-        # Przygotowanie pliku do pobrania
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_selected.to_excel(writer, index=False, sheet_name=first_sheet_name)
-        output.seek(0)
-
-        # Opcja pobrania poprawionego pliku
-        st.download_button(
-            label="Pobierz poprawiony plik Excel",
-            data=output,
-            file_name="poprawiony_oferty.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    else:
-        st.error("Brak kolumny 'Opis oferty' w pliku Excel.")
+        # Pokazanie przetwor
