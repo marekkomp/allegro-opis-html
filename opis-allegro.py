@@ -20,20 +20,6 @@ def clean_html(content):
         # Jeśli nie jest to poprawny JSON, po prostu zwracamy oryginalny tekst
         return content
 
-# Lista kolumn do zachowania w pliku wynikowym
-columns_to_keep = [
-    'Status', 'Rezultat', 'ID oferty', 'Link do oferty', 'Akcja', 'Status oferty', 
-    'Kategoria główna', 'Podkategoria', 'Sygnatura/SKU Sprzedającego', 'Liczba sztuk', 
-    'Cena PL', 'Tytuł oferty', 'Zdjęcia', 'Opis oferty', 'Informacje o gwarancjach (opcjonalne)', 
-    'Stan', 'Model', 'Marka', 'Rodzaj', 'Typ baterii', 'Przekątna ["]', 'Rozdzielczość (px)', 
-    'Powłoka matrycy', 'Rodzaj podświetlenia', 'Typ matrycy', 'Rodzaj podświetlania', 
-    'Przekątna ekranu (cale) ["]', 'Rozdzielczość natywna [px]', 'Złącza', 'Typ napędu', 
-    'Komunikacja', 'Rodzaj karty graficznej', 'System operacyjny', 'Seria', 'Taktowanie bazowe procesora [GHz]', 
-    'Liczba rdzeni procesora', 'Typ pamięci RAM', 'Wielkość pamięci RAM', 'Typ dysku twardego', 
-    'Pojemność dysku [GB]', 'Przekątna ekranu ["', 'Seria procesora', 'Ekran dotykowy', 
-    'Model procesora', 'Typ obudowy', 'Model procesora1'
-]
-
 # Streamlit UI
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
@@ -44,20 +30,11 @@ if uploaded_file is not None:
     # Wczytanie pliku Excel do DataFrame, traktując pierwszy wiersz jako nagłówek
     df = pd.read_excel(uploaded_file, sheet_name=None, header=0)  # Wczytujemy z pierwszym wierszem jako nagłówek
     
-    # Sprawdzenie, jakie kolumny zostały wczytane
-    st.write("Kolumny w wczytanym pliku:")
-    st.write(df.keys())  # Wypisujemy nazwy arkuszy
-    
-    # Wybieramy pierwszy arkusz z pliku
+    # Sprawdzenie, czy kolumna "Opis oferty" istnieje w pierwszym arkuszu
     sheet_names = df.keys()
     first_sheet_name = list(sheet_names)[0]
-    df = df[first_sheet_name]  # Wybór pierwszego arkusza
+    df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
     
-    # Wyświetlenie wczytanych kolumn
-    st.write("Wczytane kolumny:")
-    st.write(df.columns)
-
-    # Sprawdzenie, czy kolumna "Opis oferty" istnieje
     if "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
         st.write(df[["Opis oferty"]].head())
@@ -65,7 +42,22 @@ if uploaded_file is not None:
         # Przetwarzanie kolumny "Opis oferty"
         df['Opis oferty'] = df['Opis oferty'].apply(clean_html)
 
-        # Selekcja tylko wybranych kolumn
-        df_selected = df[columns_to_keep]
+        # Pokazanie przetworzonych danych
+        st.write("Przetworzone dane:")
+        st.write(df[["Opis oferty"]].head())
 
-        # Pokazanie przetwor
+        # Przygotowanie pliku do pobrania
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name=first_sheet_name)
+        output.seek(0)
+
+        # Opcja pobrania poprawionego pliku
+        st.download_button(
+            label="Pobierz poprawiony plik Excel",
+            data=output,
+            file_name="poprawiony_oferty.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    else:
+        st.error("Brak kolumny 'Opis oferty' w pliku Excel.")
