@@ -27,8 +27,8 @@ st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 uploaded_file = st.file_uploader("Wybierz plik Excel", type=["xlsm", "xlsx"])
 
 if uploaded_file is not None:
-    # Wczytanie pliku Excel do DataFrame, obsługujemy zarówno .xlsm, jak i .xlsx
-    df = pd.read_excel(uploaded_file, sheet_name=None)  # Wczytanie wszystkich arkuszy
+    # Wczytanie pliku Excel do DataFrame, pomijając pierwsze 3 wiersze i traktując czwarty wiersz jako nagłówek
+    df = pd.read_excel(uploaded_file, sheet_name=None, header=3)  # Wczytujemy z pominięciem pierwszych trzech wierszy
     
     # Sprawdzenie, czy kolumna "Opis oferty" istnieje w pierwszym arkuszu
     sheet_names = df.keys()
