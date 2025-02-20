@@ -2,30 +2,29 @@ import streamlit as st
 import pandas as pd
 from bs4 import BeautifulSoup
 import io
-import re
+import json
 
-# Funkcja czyszcząca HTML i usuwająca niepożądane fragmenty JSON
+# Funkcja czyszcząca HTML i usuwająca niepotrzebne fragmenty JSON
 def clean_html(content):
-    # Usuwanie tylko niepotrzebnych fragmentów JSON-like (zostawiając tekst)
-    content = re.sub(r'({"sections":.*?})', '', content)  # Usuwa JSON-like struktury
-    content = re.sub(r'\[.*?\]', '', content)  # Usuwa inne tablice JSON, jeśli są
-
-    # Parsowanie HTML
-    soup = BeautifulSoup(content, 'html.parser')
-    
-    # Usuwamy wszystkie niepożądane tagi
-    for tag in soup.find_all(True):  # True oznacza wszystkie tagi
-        if tag.name not in ['h1', 'h2', 'p', 'b']:  # Pozostawiamy tylko h1, h2, p, b
-            tag.unwrap()  # Usuwa tag, pozostawiając jego zawartość
-
-    # Zwracamy oczyszczony HTML
-    return str(soup)
+    # Usuwamy fragmenty JSON-like, zachowując tylko dane zawarte w "content"
+    try:
+        data = json.loads(content)  # Próbujemy zinterpretować zawartość jako JSON
+        # Sprawdzamy, czy to jest lista "items" i wyciągamy tylko zawartość typu "TEXT"
+        clean_content = ""
+        for section in data.get("sections", []):
+            for item in section.get("items", []):
+                if item.get("type") == "TEXT" and "content" in item:
+                    clean_content += item["content"]
+        return clean_content
+    except json.JSONDecodeError:
+        # Jeśli nie jest to poprawny JSON, po prostu zwracamy oryginalny tekst
+        return content
 
 # Streamlit UI
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
 # Wgrywanie pliku Excel
-uploaded_file = st.file_uploader("Wybaj plik Excel", type=["xlsm", "xlsx"])
+uploaded_file = st.file_uploader("Wybierz plik Excel", type=["xlsm", "xlsx"])
 
 if uploaded_file is not None:
     # Wczytanie pliku Excel do DataFrame, obsługujemy zarówno .xlsm, jak i .xlsx
