@@ -20,26 +20,6 @@ def clean_html(content):
         # Jeśli nie jest to poprawny JSON, po prostu zwracamy oryginalny tekst
         return content
 
-# Funkcja do zmiany nazw powtarzających się kolumn
-def rename_duplicate_columns(df):
-    # Słownik do przechowywania liczby wystąpień kolumn
-    columns_count = {}
-    
-    # Zmieniamy nazwę kolumn, które się powtarzają
-    new_columns = []
-    for column in df.columns:
-        if column in columns_count:
-            columns_count[column] += 1
-            new_column_name = f"{column}_{columns_count[column]}"  # Dodajemy licznik do powtarzającej się kolumny
-        else:
-            columns_count[column] = 0
-            new_column_name = column
-        new_columns.append(new_column_name)
-
-    # Zmieniamy nazwy kolumn
-    df.columns = new_columns
-    return df
-
 # Streamlit UI
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
@@ -55,9 +35,6 @@ if uploaded_file is not None:
     first_sheet_name = list(sheet_names)[0]
     df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
     
-    # Zmiana nazw powtarzających się kolumn
-    df = rename_duplicate_columns(df)
-
     # Lista kolumn do zachowania
     columns_to_keep = [
         "Status", "Rezultat", "ID oferty", "Link do oferty", "Akcja", "Status oferty",
