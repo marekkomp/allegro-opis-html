@@ -20,6 +20,20 @@ def clean_html(content):
         # Jeśli nie jest to poprawny JSON, po prostu zwracamy oryginalny tekst
         return content
 
+# Lista kolumn do zachowania w pliku wynikowym
+columns_to_keep = [
+    'Status', 'Rezultat', 'ID oferty', 'Link do oferty', 'Akcja', 'Status oferty', 
+    'Kategoria główna', 'Podkategoria', 'Sygnatura/SKU Sprzedającego', 'Liczba sztuk', 
+    'Cena PL', 'Tytuł oferty', 'Zdjęcia', 'Opis oferty', 'Informacje o gwarancjach (opcjonalne)', 
+    'Stan', 'Model', 'Marka', 'Rodzaj', 'Typ baterii', 'Przekątna ["]', 'Rozdzielczość (px)', 
+    'Powłoka matrycy', 'Rodzaj podświetlenia', 'Typ matrycy', 'Rodzaj podświetlania', 
+    'Przekątna ekranu (cale) ["]', 'Rozdzielczość natywna [px]', 'Złącza', 'Typ napędu', 
+    'Komunikacja', 'Rodzaj karty graficznej', 'System operacyjny', 'Seria', 'Taktowanie bazowe procesora [GHz]', 
+    'Liczba rdzeni procesora', 'Typ pamięci RAM', 'Wielkość pamięci RAM', 'Typ dysku twardego', 
+    'Pojemność dysku [GB]', 'Przekątna ekranu ["', 'Seria procesora', 'Ekran dotykowy', 
+    'Model procesora', 'Typ obudowy', 'Model procesora1'
+]
+
 # Streamlit UI
 st.title("Przetwarzanie plików Excel i czyszczenie HTML w opisach ofert")
 
@@ -35,23 +49,6 @@ if uploaded_file is not None:
     first_sheet_name = list(sheet_names)[0]
     df = df[first_sheet_name]  # Wybór pierwszego arkusza, jeśli jest ich więcej
     
-    # Lista kolumn do zachowania
-    columns_to_keep = [
-        "Status", "Rezultat", "ID oferty", "Link do oferty", "Akcja", "Status oferty",
-        "Kategoria główna", "Podkategoria", "Sygnatura/SKU Sprzedającego", "Liczba sztuk", 
-        "Cena PL", "Tytuł oferty", "Zdjęcia", "Opis oferty", "Informacje o gwarancjach (opcjonalne)", 
-        "Stan", "Model", "Marka", "Rodzaj", "Typ baterii", "Przekątna [\"]", 
-        "Rozdzielczość (px)", "Powłoka matrycy", "Rodzaj podświetlenia", "Typ matrycy", 
-        "Rodzaj podświetlania", "Przekątna ekranu (cale) [\"]", "Rozdzielczość natywna [px]", 
-        "Złącza", "Typ napędu", "Komunikacja", "Rodzaj karty graficznej", "System operacyjny", 
-        "Seria", "Taktowanie bazowe procesora [GHz]", "Liczba rdzeni procesora", "Typ pamięci RAM", 
-        "Wielkość pamięci RAM", "Typ dysku twardego", "Pojemność dysku [GB]", "Przekątna ekranu [\"]", 
-        "Seria procesora", "Ekran dotykowy", "Model procesora", "Typ obudowy", "Model procesora"
-    ]
-    
-    # Zachowanie tylko wybranych kolumn
-    df = df[columns_to_keep]
-
     if "Opis oferty" in df.columns:
         st.write("Oryginalne dane:")
         st.write(df[["Opis oferty"]].head())
@@ -59,14 +56,17 @@ if uploaded_file is not None:
         # Przetwarzanie kolumny "Opis oferty"
         df['Opis oferty'] = df['Opis oferty'].apply(clean_html)
 
+        # Selekcja tylko wybranych kolumn
+        df_selected = df[columns_to_keep]
+
         # Pokazanie przetworzonych danych
         st.write("Przetworzone dane:")
-        st.write(df[["Opis oferty"]].head())
+        st.write(df_selected.head())
 
         # Przygotowanie pliku do pobrania
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name=first_sheet_name)
+            df_selected.to_excel(writer, index=False, sheet_name=first_sheet_name)
         output.seek(0)
 
         # Opcja pobrania poprawionego pliku
